@@ -2,8 +2,7 @@ name: LocalAid Backend Tests & Coverage
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
 
 jobs:
@@ -11,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -25,19 +24,22 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-django pytest-cov
 
-      - name: Set environment variables for Django
+      - name: Set environment variables
         run: |
           echo "DJANGO_SETTINGS_MODULE=localaid_project.settings" >> $GITHUB_ENV
           echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
-      - name: Make sure test database exists
+      - name: Run migrations
         run: |
-          python manage.py makemigrations
+          python manage.py makemigrations --noinput
           python manage.py migrate --noinput
 
       - name: Run tests with coverage
         run: |
-          pytest --ds=localaid_project.settings --cov=core --cov=accounts --cov-report=term-missing --cov-report=xml
+          pytest --ds=localaid_project.settings \
+                 --cov=core --cov=accounts \
+                 --cov-report=term-missing \
+                 --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

@@ -10,9 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      # No external DB service needed; SQLite is used
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -28,17 +25,19 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-django pytest-cov
 
-      - name: Set Django settings for CI
+      - name: Set environment variables for Django
         run: |
           echo "DJANGO_SETTINGS_MODULE=localaid_project.settings" >> $GITHUB_ENV
+          echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
-      - name: Run migrations
+      - name: Make sure test database exists
         run: |
-          python manage.py migrate
+          python manage.py makemigrations
+          python manage.py migrate --noinput
 
       - name: Run tests with coverage
         run: |
-          pytest --cov=core --cov=accounts --cov-report=term-missing --cov-report=xml
+          pytest --ds=localaid_project.settings --cov=core --cov=accounts --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
